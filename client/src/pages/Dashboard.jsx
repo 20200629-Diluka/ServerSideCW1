@@ -10,8 +10,7 @@ import {
     Button,
     Card,
     Alert,
-    Spinner,
-    InputGroup
+    Spinner
 } from 'react-bootstrap';
 
 export default function Dashboard() {
@@ -173,90 +172,89 @@ export default function Dashboard() {
 
     return (
         <Container>
-            <h1 className="mb-4 fw-bold">Dashboard</h1>
+            <h1 className="mb-4">Dashboard</h1>
 
-            <Card className="mb-4 shadow-sm">
+            <Card className="mb-4 border-0 shadow-sm">
                 <Card.Body className="p-4">
-                    <h2 className="h5 mb-3">Welcome, {user?.username}!</h2>
-                    <p>Use this dashboard to explore country data from the RestCountries API.</p>
+                    <p className="text-muted mb-4">Search for country information using your API key.</p>
 
                     {apiKeys.length === 0 ? (
-                        <Alert variant="warning" className="mb-3">
-                            <p className="mb-0">You don't have any API keys yet.</p>
-                            <Link to="/api-keys">
+                        <Alert variant="warning" className="mb-4">
+                            <p className="mb-2">You don't have any API keys yet.</p>
+                            <Link to="/api-keys" className="btn btn-sm btn-outline-dark">
                                 Create an API key
-                            </Link> to start using the API.
+                            </Link>
                         </Alert>
                     ) : (
-                        <div className="mb-3">
+                        <div className="mb-4">
                             {apiKeys.filter(key => key.is_active === 1).length === 0 && (
                                 <Alert variant="warning" className="mb-3">
-                                    <p className="mb-0">You have API keys but none are active.</p>
+                                    <p className="mb-2">You have API keys but none are active.</p>
                                     <Button
                                         onClick={activateAllKeys}
-                                        variant="primary"
-                                        className="mt-2"
+                                        variant="outline-dark"
+                                        size="sm"
                                         disabled={loading}
                                     >
                                         {loading ? 'Activating...' : 'Activate All Keys'}
                                     </Button>
                                 </Alert>
                             )}
-                            <div className="d-flex align-items-center mb-3">
-                                <span className="me-2">Use manual API key:</span>
-                                <Button 
-                                    variant={useManualKey ? "primary" : "outline-primary"}
-                                    size="sm"
-                                    onClick={() => setUseManualKey(!useManualKey)}
-                                    className="me-2"
-                                >
-                                    {useManualKey ? "On" : "Off"}
-                                </Button>
-                            </div>
+                            
+                            <Form.Group className="mb-3">
+                                <div className="d-flex align-items-center mb-2">
+                                    <Form.Check
+                                        type="switch"
+                                        id="useManualKey"
+                                        label="Use manual API key"
+                                        checked={useManualKey}
+                                        onChange={() => setUseManualKey(!useManualKey)}
+                                        className="me-2"
+                                    />
+                                </div>
 
-                            {!useManualKey ? (
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Select API Key</Form.Label>
+                                {!useManualKey ? (
                                     <Form.Select
                                         value={selectedApiKey}
                                         onChange={(e) => setSelectedApiKey(e.target.value)}
+                                        className="py-2"
                                     >
+                                        <option value="" disabled>Select an API key</option>
                                         {apiKeys.map((key) => (
                                             <option key={key.id} value={key.key}>
                                                 {key.name}
                                             </option>
                                         ))}
                                     </Form.Select>
-                                </Form.Group>
-                            ) : (
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Enter API Key manually</Form.Label>
+                                ) : (
                                     <Form.Control
                                         type="text"
                                         placeholder="Paste your API key here"
                                         value={manualApiKey}
                                         onChange={(e) => setManualApiKey(e.target.value)}
+                                        className="py-2"
                                     />
-                                </Form.Group>
-                            )}
+                                )}
+                            </Form.Group>
                         </div>
                     )}
 
                     <Form onSubmit={handleSearch}>
-                        <Row className="g-2 align-items-center">
+                        <Row className="g-2">
                             <Col md={8}>
                                 <Form.Control
                                     type="text"
-                                    placeholder="Enter country name"
+                                    placeholder="Enter country name (e.g., France, USA, Japan)"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="py-2"
                                 />
                             </Col>
                             <Col md={4}>
                                 <Button
                                     type="submit"
-                                    variant="primary"
-                                    className="w-100"
+                                    variant="dark"
+                                    className="w-100 py-2"
                                     disabled={!(useManualKey ? manualApiKey : selectedApiKey) || searching}
                                 >
                                     {searching ? 'Searching...' : 'Search'}
@@ -278,10 +276,10 @@ export default function Dashboard() {
                     <Spinner animation="border" />
                 </div>
             ) : (
-                <Row>
+                <Row className="g-4">
                     {countries.map((country, index) => (
-                        <Col key={index} xs={12} sm={6} md={4} className="mb-4">
-                            <Card className="h-100">
+                        <Col key={index} xs={12} sm={6} md={4}>
+                            <Card className="h-100 border-0 shadow-sm">
                                 <Card.Img
                                     variant="top"
                                     src={country.flags.png}
@@ -289,21 +287,23 @@ export default function Dashboard() {
                                     style={{ height: "160px", objectFit: "cover" }}
                                 />
                                 <Card.Body>
-                                    <Card.Title>{country.name.common}</Card.Title>
-                                    <Card.Text>
-                                        <span className="fw-bold">Capital: </span>
-                                        {country.capital && country.capital.length > 0
-                                            ? country.capital.join(', ')
-                                            : 'N/A'}
-                                    </Card.Text>
-                                    <Card.Text>
-                                        <span className="fw-bold">Currencies: </span>
-                                        {formatCurrencies(country.currencies)}
-                                    </Card.Text>
-                                    <Card.Text>
-                                        <span className="fw-bold">Languages: </span>
-                                        {formatLanguages(country.languages)}
-                                    </Card.Text>
+                                    <Card.Title className="h5 mb-3">{country.name.common}</Card.Title>
+                                    <div className="small">
+                                        <div className="mb-2">
+                                            <span className="fw-bold">Capital: </span>
+                                            {country.capital && country.capital.length > 0
+                                                ? country.capital.join(', ')
+                                                : 'N/A'}
+                                        </div>
+                                        <div className="mb-2">
+                                            <span className="fw-bold">Currencies: </span>
+                                            {formatCurrencies(country.currencies)}
+                                        </div>
+                                        <div>
+                                            <span className="fw-bold">Languages: </span>
+                                            {formatLanguages(country.languages)}
+                                        </div>
+                                    </div>
                                 </Card.Body>
                             </Card>
                         </Col>
@@ -311,9 +311,9 @@ export default function Dashboard() {
 
                     {countries.length === 0 && !loading && !error && (
                         <Col xs={12} className="text-center py-5">
-                            <h3 className="h6">
+                            <p className="text-muted">
                                 No countries to display. Try searching for a country.
-                            </h3>
+                            </p>
                         </Col>
                     )}
                 </Row>

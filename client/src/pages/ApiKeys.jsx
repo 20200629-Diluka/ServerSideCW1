@@ -11,9 +11,7 @@ import {
     Alert,
     Modal,
     Badge,
-    Spinner,
-    OverlayTrigger,
-    Tooltip
+    Spinner
 } from 'react-bootstrap';
 
 export default function ApiKeys() {
@@ -83,7 +81,7 @@ export default function ApiKeys() {
             // Refresh the list of keys
             fetchApiKeys();
 
-            setSuccessMessage('API key created successfully. Make sure to copy your key now!');
+            setSuccessMessage('API key created successfully.');
         } catch (err) {
             console.error('Error creating API key:', err);
             setError('Failed to create API key. Please try again.');
@@ -175,10 +173,10 @@ export default function ApiKeys() {
 
     return (
         <Container>
-            <h1 className="mb-4 fw-bold">API Key Management</h1>
+            <h1 className="mb-4">API Key Management</h1>
 
             {/* Create new API key */}
-            <Card className="shadow-sm mb-4">
+            <Card className="border-0 shadow-sm mb-4">
                 <Card.Body className="p-4">
                     <h2 className="h5 mb-3">Create a New API Key</h2>
 
@@ -194,6 +192,7 @@ export default function ApiKeys() {
                                         value={newKeyName}
                                         onChange={(e) => setNewKeyName(e.target.value)}
                                         required
+                                        className="py-2"
                                     />
                                 </Form.Group>
                             </Col>
@@ -207,18 +206,16 @@ export default function ApiKeys() {
                                         onChange={(e) => setExpiryDays(e.target.value)}
                                         min="0"
                                         max="365"
+                                        className="py-2"
                                     />
-                                    <Form.Text className="text-muted">
-                                        Set to 0 for a non-expiring key
-                                    </Form.Text>
                                 </Form.Group>
                             </Col>
                             <Col xs={12}>
                                 <Button
                                     type="submit"
-                                    variant="success"
+                                    variant="dark"
                                     disabled={creatingKey}
-                                    className="mt-2"
+                                    className="py-2 px-4"
                                 >
                                     {creatingKey ? (
                                         <>
@@ -244,40 +241,36 @@ export default function ApiKeys() {
 
             {/* Success message */}
             {successMessage && (
-                <Alert variant="success" className="mb-3">
+                <Alert variant="success" className="mb-4">
                     {successMessage}
                 </Alert>
             )}
 
             {/* Error message */}
             {error && (
-                <Alert variant="danger" className="mb-3">
+                <Alert variant="danger" className="mb-4">
                     {error}
                 </Alert>
             )}
 
             {/* Newly created key */}
             {newlyCreatedKey && (
-                <Alert variant="info" className="mb-3">
+                <Alert variant="info" className="mb-4">
                     <h5>Your new API key:</h5>
-                    <div className="bg-light p-3 my-2 border rounded d-flex align-items-center justify-content-between">
-                        <code className="text-break">{newlyCreatedKey.key}</code>
+                    <div className="bg-light p-3 my-3 border rounded d-flex align-items-center justify-content-between">
+                        <code className="text-break fs-6 text-dark">{newlyCreatedKey.key}</code>
                         <Button
-                            variant="outline-secondary"
+                            variant="outline-dark"
                             size="sm"
                             onClick={() => copyToClipboard(newlyCreatedKey.key)}
                         >
                             Copy
                         </Button>
                     </div>
-                    <p className="fw-bold mb-1">
-                        Important: Copy this key now. You won't be able to see it again!
-                    </p>
                     <Button
-                        variant="outline-primary"
+                        variant="outline-dark"
                         size="sm"
                         onClick={() => setNewlyCreatedKey(null)}
-                        className="mt-2"
                     >
                         Dismiss
                     </Button>
@@ -285,9 +278,9 @@ export default function ApiKeys() {
             )}
 
             {/* API keys list */}
-            <Card className="shadow-sm">
+            <Card className="border-0 shadow-sm">
                 <Card.Body className="p-4">
-                    <h2 className="h5 mb-3">Your API Keys</h2>
+                    <h2 className="h5 mb-4">Your API Keys</h2>
 
                     {loading ? (
                         <div className="d-flex justify-content-center py-4">
@@ -295,13 +288,13 @@ export default function ApiKeys() {
                         </div>
                     ) : apiKeys.length === 0 ? (
                         <div className="text-center py-4">
-                            <p>You don't have any API keys yet.</p>
+                            <p className="text-muted">You don't have any API keys yet.</p>
                         </div>
                     ) : (
                         <div className="table-responsive">
-                            <Table hover>
-                                <thead className="table-light">
-                                    <tr>
+                            <Table hover className="align-middle">
+                                <thead>
+                                    <tr className="table-light">
                                         <th>Name</th>
                                         <th>Key</th>
                                         <th>Created</th>
@@ -318,7 +311,7 @@ export default function ApiKeys() {
                                             <td>{key.name}</td>
                                             <td>
                                                 <div className="d-flex align-items-center">
-                                                    <code className="me-2">
+                                                    <code className="me-2 small">
                                                         {key.displayKey}
                                                     </code>
                                                     <Button
@@ -331,10 +324,10 @@ export default function ApiKeys() {
                                                     </Button>
                                                 </div>
                                             </td>
-                                            <td>{formatDate(key.created_at)}</td>
-                                            <td>{formatDate(key.expires_at)}</td>
-                                            <td>{formatDate(key.last_used_at)}</td>
-                                            <td>{key.usage_count || 0}</td>
+                                            <td className="small">{formatDate(key.created_at)}</td>
+                                            <td className="small">{formatDate(key.expires_at)}</td>
+                                            <td className="small">{formatDate(key.last_used_at)}</td>
+                                            <td className="text-center">{key.usage_count || 0}</td>
                                             <td>
                                                 <div className="d-flex align-items-center">
                                                     <Form.Check
@@ -343,7 +336,7 @@ export default function ApiKeys() {
                                                         onChange={() => handleToggleKey(key.id)}
                                                         className="me-2"
                                                     />
-                                                    <Badge bg={key.is_active ? "success" : "danger"}>
+                                                    <Badge bg={key.is_active ? "success" : "secondary"} className="px-2 py-1">
                                                         {key.is_active ? "Active" : "Inactive"}
                                                     </Badge>
                                                 </div>
@@ -372,18 +365,20 @@ export default function ApiKeys() {
                 show={showConfirmation}
                 onHide={() => setShowConfirmation(false)}
                 centered
+                size="sm"
             >
                 <Modal.Header closeButton>
-                    <Modal.Title>Confirm Deletion</Modal.Title>
+                    <Modal.Title className="h5">Confirm Deletion</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    Are you sure you want to delete the API key "{keyToDelete?.name}"? This action cannot be undone.
+                    <p>Are you sure you want to delete the API key "{keyToDelete?.name}"?</p>
+                    <p className="mb-0 text-danger small">This action cannot be undone.</p>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowConfirmation(false)}>
+                    <Button variant="outline-dark" size="sm" onClick={() => setShowConfirmation(false)}>
                         Cancel
                     </Button>
-                    <Button variant="danger" onClick={handleDeleteKey}>
+                    <Button variant="danger" size="sm" onClick={handleDeleteKey}>
                         Delete
                     </Button>
                 </Modal.Footer>

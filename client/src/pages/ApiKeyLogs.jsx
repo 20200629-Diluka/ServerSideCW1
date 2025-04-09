@@ -9,9 +9,7 @@ import {
     Form,
     Button,
     InputGroup,
-    Badge,
-    Row,
-    Col
+    Badge
 } from 'react-bootstrap';
 
 export default function ApiKeyLogs() {
@@ -53,10 +51,7 @@ export default function ApiKeyLogs() {
 
         const term = searchTerm.toLowerCase();
         const filtered = logs.filter(
-            log =>
-                log.key_name.toLowerCase().includes(term) ||
-                log.endpoint.toLowerCase().includes(term) ||
-                log.key_value.toLowerCase().includes(term)
+            log => log.key_name.toLowerCase().includes(term)
         );
 
         setFilteredLogs(filtered);
@@ -80,48 +75,46 @@ export default function ApiKeyLogs() {
 
     return (
         <Container>
-            <h1 className="mb-4 fw-bold">API Key Usage Logs</h1>
+            <h1 className="mb-4">API Key Usage Logs</h1>
 
-            {/* Search and Filter Controls */}
-            <Row className="mb-4 align-items-center">
-                <Col>
-                    <InputGroup>
+            <Card className="border-0 shadow-sm mb-4">
+                <Card.Body className="p-4">
+                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3">
+                        <h2 className="h5 mb-3 mb-md-0">API Request Logs</h2>
+                        <Button
+                            variant="outline-dark"
+                            size="sm"
+                            onClick={handleRefresh}
+                            disabled={loading}
+                            className="px-3 py-1"
+                        >
+                            {loading ? 'Refreshing...' : 'Refresh Logs'}
+                        </Button>
+                    </div>
+
+                    <InputGroup className="mb-4">
                         <Form.Control
-                            placeholder="Search by key name, endpoint..."
+                            placeholder="Search by key name"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            className="py-2"
                         />
-                        <Button 
-                            variant="outline-secondary"
-                            onClick={() => setSearchTerm('')}
-                            disabled={!searchTerm}
-                        >
-                            Clear
-                        </Button>
+                        {searchTerm && (
+                            <Button 
+                                variant="outline-dark"
+                                onClick={() => setSearchTerm('')}
+                            >
+                                Clear
+                            </Button>
+                        )}
                     </InputGroup>
-                </Col>
-                <Col xs="auto">
-                    <Button
-                        variant="outline-primary"
-                        onClick={handleRefresh}
-                        disabled={loading}
-                    >
-                        {loading ? 'Refreshing...' : 'Refresh'}
-                    </Button>
-                </Col>
-            </Row>
 
-            {/* Error message */}
-            {error && (
-                <Alert variant="danger" className="mb-4">
-                    {error}
-                </Alert>
-            )}
-
-            {/* Logs Table */}
-            <Card className="shadow-sm">
-                <Card.Body>
-                    <h2 className="h5 mb-3">API Request Log</h2>
+                    {/* Error message */}
+                    {error && (
+                        <Alert variant="danger" className="mb-4">
+                            {error}
+                        </Alert>
+                    )}
 
                     {loading ? (
                         <div className="d-flex justify-content-center py-4">
@@ -129,7 +122,7 @@ export default function ApiKeyLogs() {
                         </div>
                     ) : filteredLogs.length === 0 ? (
                         <div className="text-center py-4">
-                            <p className="mb-0">
+                            <p className="text-muted mb-0">
                                 {logs.length === 0
                                     ? "No API key usage logs found."
                                     : "No logs match your search criteria."}
@@ -137,11 +130,10 @@ export default function ApiKeyLogs() {
                         </div>
                     ) : (
                         <div className="table-responsive">
-                            <Table hover>
-                                <thead className="table-light">
-                                    <tr>
+                            <Table hover className="align-middle">
+                                <thead>
+                                    <tr className="table-light">
                                         <th>Date/Time</th>
-                                        <th>API Key</th>
                                         <th>Key Name</th>
                                         <th>Endpoint</th>
                                     </tr>
@@ -149,13 +141,10 @@ export default function ApiKeyLogs() {
                                 <tbody>
                                     {filteredLogs.map((log) => (
                                         <tr key={log.usage_id}>
-                                            <td>{formatDate(log.request_timestamp)}</td>
-                                            <td>
-                                                <code>{log.key_value}</code>
-                                            </td>
+                                            <td className="small">{formatDate(log.request_timestamp)}</td>
                                             <td>{log.key_name}</td>
                                             <td>
-                                                <Badge bg="primary">
+                                                <Badge bg="dark" className="px-2 py-1 text-white">
                                                     {log.endpoint}
                                                 </Badge>
                                             </td>
