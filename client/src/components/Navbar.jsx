@@ -1,227 +1,122 @@
 import { useState } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import {
-    AppBar,
-    Box,
-    Toolbar,
-    IconButton,
-    Typography,
-    Menu,
-    Container,
-    Button,
-    MenuItem,
-    Avatar,
-    Drawer,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
-    Divider
-} from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import LogoutIcon from '@mui/icons-material/Logout';
+import { Navbar, Container, Nav, Button, Offcanvas } from 'react-bootstrap';
 
-export default function Navbar() {
+export default function AppNavbar() {
     const { user, logout, isAuthenticated } = useAuth();
     const navigate = useNavigate();
-    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [showOffcanvas, setShowOffcanvas] = useState(false);
 
     const handleLogout = () => {
         logout();
         navigate('/login');
-        setDrawerOpen(false);
+        setShowOffcanvas(false);
     };
 
-    const toggleDrawer = (open) => (event) => {
-        if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
-            return;
-        }
-        setDrawerOpen(open);
-    };
+    const handleCloseOffcanvas = () => setShowOffcanvas(false);
+    const handleShowOffcanvas = () => setShowOffcanvas(true);
 
     return (
         <>
-            <AppBar position="static">
-                <Container maxWidth="xl">
-                    <Toolbar disableGutters>
-                        <Typography
-                            variant="h6"
-                            noWrap
-                            component={RouterLink}
-                            to="/"
-                            sx={{
-                                mr: 2,
-                                display: { xs: 'none', md: 'flex' },
-                                fontWeight: 700,
-                                color: 'inherit',
-                                textDecoration: 'none',
-                            }}
-                        >
-                            Countries API
-                        </Typography>
-
-                        <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-                            <IconButton
-                                size="large"
-                                aria-label="menu"
-                                aria-controls="menu-appbar"
-                                aria-haspopup="true"
-                                onClick={toggleDrawer(true)}
-                                color="inherit"
-                            >
-                                <MenuIcon />
-                            </IconButton>
-                        </Box>
-
-                        <Typography
-                            variant="h6"
-                            noWrap
-                            component={RouterLink}
-                            to="/"
-                            sx={{
-                                mr: 2,
-                                display: { xs: 'flex', md: 'none' },
-                                flexGrow: 1,
-                                fontWeight: 700,
-                                color: 'inherit',
-                                textDecoration: 'none',
-                            }}
-                        >
-                            Countries API
-                        </Typography>
-
-                        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-                            <Button
-                                component={RouterLink}
-                                to="/"
-                                sx={{ my: 2, color: 'white', display: 'block' }}
-                            >
-                                Home
-                            </Button>
-
+            <Navbar bg="dark" variant="dark" expand="md" className="py-2">
+                <Container>
+                    <Navbar.Brand as={Link} to="/" className="fw-bold">Countries API</Navbar.Brand>
+                    <Navbar.Toggle aria-controls="navbar-nav" onClick={handleShowOffcanvas} />
+                    
+                    <Navbar.Collapse id="navbar-nav" className="d-none d-md-flex">
+                        <Nav className="me-auto">
                             {isAuthenticated && (
                                 <>
-                                    <Button
-                                        component={RouterLink}
-                                        to="/dashboard"
-                                        sx={{ my: 2, color: 'white', display: 'block' }}
-                                    >
-                                        Dashboard
-                                    </Button>
-                                    <Button
-                                        component={RouterLink}
-                                        to="/api-keys"
-                                        sx={{ my: 2, color: 'white', display: 'block' }}
-                                    >
-                                        API Keys
-                                    </Button>
-                                    <Button
-                                        component={RouterLink}
-                                        to="/api-key-logs"
-                                        sx={{ my: 2, color: 'white', display: 'block' }}
-                                    >
-                                        API Logs
-                                    </Button>
+                                    <Nav.Link as={Link} to="/dashboard">Dashboard</Nav.Link>
+                                    <Nav.Link as={Link} to="/api-keys">API Keys</Nav.Link>
+                                    <Nav.Link as={Link} to="/api-key-logs">API Logs</Nav.Link>
                                 </>
                             )}
-                        </Box>
-
-                        <Box sx={{ flexGrow: 0 }}>
+                        </Nav>
+                        <Nav>
                             {isAuthenticated ? (
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <Typography sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}>
+                                <div className="d-flex align-items-center">
+                                    <span className="text-light me-3 d-none d-md-block">
                                         {user?.username}
-                                    </Typography>
-                                    <Button
-                                        variant="contained"
-                                        color="error"
-                                        startIcon={<LogoutIcon />}
+                                    </span>
+                                    <Button 
+                                        variant="outline-light"
+                                        size="sm"
                                         onClick={handleLogout}
                                     >
                                         Logout
                                     </Button>
-                                </Box>
+                                </div>
                             ) : (
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    <Button
-                                        component={RouterLink}
-                                        to="/login"
-                                        color="inherit"
+                                <div className="d-flex gap-2">
+                                    <Button 
+                                        as={Link} 
+                                        to="/login" 
+                                        variant="outline-light"
+                                        size="sm"
                                     >
                                         Login
                                     </Button>
-                                    <Button
-                                        component={RouterLink}
-                                        to="/register"
-                                        variant="contained"
-                                        color="secondary"
+                                    <Button 
+                                        as={Link} 
+                                        to="/register" 
+                                        variant="light"
+                                        size="sm"
                                     >
                                         Register
                                     </Button>
-                                </Box>
+                                </div>
                             )}
-                        </Box>
-                    </Toolbar>
+                        </Nav>
+                    </Navbar.Collapse>
                 </Container>
-            </AppBar>
+            </Navbar>
 
-            {/* Mobile drawer */}
-            <Drawer
-                anchor="left"
-                open={drawerOpen}
-                onClose={toggleDrawer(false)}
-            >
-                <Box
-                    sx={{ width: 250 }}
-                    role="presentation"
-                    onClick={toggleDrawer(false)}
-                    onKeyDown={toggleDrawer(false)}
-                >
-                    <List>
-                        <ListItem>
-                            <Typography variant="h6" component="div">
-                                Countries API
-                            </Typography>
-                        </ListItem>
-                        <Divider />
-                        <ListItemButton component={RouterLink} to="/">
-                            <ListItemText primary="Home" />
-                        </ListItemButton>
+            {/* Mobile Offcanvas Menu */}
+            <Offcanvas show={showOffcanvas} onHide={handleCloseOffcanvas} className="bg-light">
+                <Offcanvas.Header closeButton className="border-bottom">
+                    <Offcanvas.Title>Countries API</Offcanvas.Title>
+                </Offcanvas.Header>
+                <Offcanvas.Body>
+                    <Nav className="flex-column">
                         {isAuthenticated ? (
                             <>
-                                <ListItemButton component={RouterLink} to="/dashboard">
-                                    <ListItemText primary="Dashboard" />
-                                </ListItemButton>
-                                <ListItemButton component={RouterLink} to="/api-keys">
-                                    <ListItemText primary="API Keys" />
-                                </ListItemButton>
-                                <ListItemButton component={RouterLink} to="/api-key-logs">
-                                    <ListItemText primary="API Logs" />
-                                </ListItemButton>
-                                <Divider />
-                                <ListItem>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Logged in as {user?.username}
-                                    </Typography>
-                                </ListItem>
-                                <ListItemButton onClick={handleLogout}>
-                                    <ListItemText primary="Logout" sx={{ color: 'error.main' }} />
-                                </ListItemButton>
+                                <Nav.Link as={Link} to="/dashboard" onClick={handleCloseOffcanvas} className="py-2">
+                                    Dashboard
+                                </Nav.Link>
+                                <Nav.Link as={Link} to="/api-keys" onClick={handleCloseOffcanvas} className="py-2">
+                                    API Keys
+                                </Nav.Link>
+                                <Nav.Link as={Link} to="/api-key-logs" onClick={handleCloseOffcanvas} className="py-2">
+                                    API Logs
+                                </Nav.Link>
+                                <hr />
+                                <div className="text-muted mb-3">
+                                    Logged in as {user?.username}
+                                </div>
+                                <Button 
+                                    variant="outline-dark" 
+                                    size="sm"
+                                    onClick={handleLogout}
+                                    className="w-100"
+                                >
+                                    Logout
+                                </Button>
                             </>
                         ) : (
                             <>
-                                <ListItemButton component={RouterLink} to="/login">
-                                    <ListItemText primary="Login" />
-                                </ListItemButton>
-                                <ListItemButton component={RouterLink} to="/register">
-                                    <ListItemText primary="Register" />
-                                </ListItemButton>
+                                <Nav.Link as={Link} to="/login" onClick={handleCloseOffcanvas} className="py-2">
+                                    Login
+                                </Nav.Link>
+                                <Nav.Link as={Link} to="/register" onClick={handleCloseOffcanvas} className="py-2">
+                                    Register
+                                </Nav.Link>
                             </>
                         )}
-                    </List>
-                </Box>
-            </Drawer>
+                    </Nav>
+                </Offcanvas.Body>
+            </Offcanvas>
         </>
     );
 } 
