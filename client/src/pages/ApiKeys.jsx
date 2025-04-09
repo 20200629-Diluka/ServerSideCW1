@@ -188,7 +188,7 @@ export default function ApiKeys() {
                                     <Form.Control
                                         type="text"
                                         id="keyName"
-                                        placeholder="e.g., API Key 1, API Key 2"
+                                        placeholder="Enter api key name"
                                         value={newKeyName}
                                         onChange={(e) => setNewKeyName(e.target.value)}
                                         required

@@ -244,7 +244,7 @@ export default function Dashboard() {
                             <Col md={8}>
                                 <Form.Control
                                     type="text"
-                                    placeholder="Enter country name (e.g., France, USA, Japan)"
+                                    placeholder="Enter country name"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="py-2"
