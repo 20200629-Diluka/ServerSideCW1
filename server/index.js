@@ -7,12 +7,12 @@ const path = require('path');
 dotenv.config();
 
 // Import routes
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./routes/userAuth');
 const countriesRoutes = require('./routes/countries');
 const apiKeyRoutes = require('./routes/apiKeys');
 
 // Initialize database
-const { initDatabase } = require('./db/database');
+const { initDatabase } = require('./db/createDatabase');
 
 // Create Express app
 const app = express();
@@ -37,7 +37,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({
         success: false,
         message: 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        error: err.message
     });
 });
 

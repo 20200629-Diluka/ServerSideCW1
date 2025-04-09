@@ -27,7 +27,7 @@ const verifyToken = (req, res, next) => {
 // Verify API key middleware
 const verifyApiKey = (req, res, next) => {
     const apiKey = req.headers['x-api-key'];
-    console.log('Received API key:', apiKey);
+    //console.log('Received API key:', apiKey);
 
     if (!apiKey) {
         console.log('No API key provided in request');

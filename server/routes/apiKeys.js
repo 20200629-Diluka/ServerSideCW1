@@ -1,5 +1,5 @@
 const express = require('express');
-const { db } = require('../db/database');
+const { db } = require('../db/createDatabase');
 const { verifyToken } = require('../middleware/auth');
 const { generateApiKey, generateExpiryDate, formatApiKey } = require('../utils/apiKeyUtils');
 
@@ -22,7 +22,6 @@ router.get('/', verifyToken, (req, res) => {
             // Debug info on fetched keys
             console.log(`Found ${keys.length} API keys for user ${req.user.id}`);
 
-            // Return the keys with the actual key (not masked)
             // Make sure the keys are properly formatted before sending them
             const formattedKeys = keys.map(key => ({
                 ...key,
@@ -81,32 +80,6 @@ router.post('/', verifyToken, (req, res) => {
                     expires_at: expiryDate ? expiryDate.toISOString() : null,
                     is_active: 1
                 }
-            });
-        }
-    );
-});
-
-// Add new admin-only maintenance endpoint to fix API keys
-router.post('/fix-inactive-keys', verifyToken, (req, res) => {
-    // Activate all keys for the authenticated user
-    db.run(
-        'UPDATE api_keys SET is_active = 1 WHERE user_id = ?',
-        [req.user.id],
-        function (err) {
-            if (err) {
-                console.error('Error activating API keys:', err);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Error activating API keys'
-                });
-            }
-
-            console.log(`Activated ${this.changes} API keys for user ${req.user.id}`);
-
-            return res.status(200).json({
-                success: true,
-                message: `Successfully activated ${this.changes} API keys`,
-                activatedCount: this.changes
             });
         }
     );
