@@ -2,37 +2,19 @@ import { useState, useEffect } from 'react';
 import { apiKeysAPI } from '../services/api';
 import {
     Container,
-    Typography,
-    Box,
-    Paper,
-    Grid,
-    TextField,
+    Row,
+    Col,
+    Form,
     Button,
+    Card,
     Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
     Alert,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-    Switch,
-    FormControl,
-    FormHelperText,
-    IconButton,
-    Chip,
-    InputLabel,
-    CircularProgress,
+    Modal,
+    Badge,
+    Spinner,
+    OverlayTrigger,
     Tooltip
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import ApiKeyUsageDialog from '../components/ApiKeyUsageDialog';
+} from 'react-bootstrap';
 
 export default function ApiKeys() {
     const [apiKeys, setApiKeys] = useState([]);
@@ -45,14 +27,6 @@ export default function ApiKeys() {
     const [newlyCreatedKey, setNewlyCreatedKey] = useState(null);
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [keyToDelete, setKeyToDelete] = useState(null);
-
-    // Usage dialog states
-    const [showUsageDialog, setShowUsageDialog] = useState(false);
-    const [selectedKeyId, setSelectedKeyId] = useState(null);
-    const [usageData, setUsageData] = useState(null);
-    const [usageSummary, setUsageSummary] = useState(null);
-    const [selectedKeyData, setSelectedKeyData] = useState(null);
-    const [loadingUsage, setLoadingUsage] = useState(false);
 
     // Fetch API keys
     const fetchApiKeys = async () => {
@@ -79,40 +53,6 @@ export default function ApiKeys() {
     useEffect(() => {
         fetchApiKeys();
     }, []);
-
-    // Fetch API key usage data
-    const fetchKeyUsage = async (keyId) => {
-        setLoadingUsage(true);
-        setError(null);
-
-        try {
-            const response = await apiKeysAPI.getKeyUsage(keyId);
-            setUsageData(response.data.usage);
-            setUsageSummary(response.data.summary);
-            setSelectedKeyData(response.data.key);
-        } catch (err) {
-            console.error('Error fetching API key usage:', err);
-            setError('Failed to load API key usage data.');
-        } finally {
-            setLoadingUsage(false);
-        }
-    };
-
-    // Open usage dialog
-    const handleViewUsage = (keyId) => {
-        setSelectedKeyId(keyId);
-        setShowUsageDialog(true);
-        fetchKeyUsage(keyId);
-    };
-
-    // Close usage dialog
-    const handleCloseUsageDialog = () => {
-        setShowUsageDialog(false);
-        setSelectedKeyId(null);
-        setUsageData(null);
-        setUsageSummary(null);
-        setSelectedKeyData(null);
-    };
 
     // Create a new API key
     const handleCreateKey = async (e) => {
@@ -209,7 +149,11 @@ export default function ApiKeys() {
         if (!dateString) return 'Never';
 
         const date = new Date(dateString);
-        return date.toLocaleString();
+        return date.toLocaleString('en-GB', {
+            timeZone: 'UTC',
+            dateStyle: 'medium',
+            timeStyle: 'medium'
+        });
     };
 
     // Copy API key to clipboard
@@ -230,110 +174,110 @@ export default function ApiKeys() {
     };
 
     return (
-        <Container maxWidth="xl">
-            <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 'bold' }}>
-                API Key Management
-            </Typography>
+        <Container>
+            <h1 className="mb-4 fw-bold">API Key Management</h1>
 
             {/* Create new API key */}
-            <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-                <Typography variant="h5" component="h2" gutterBottom>
-                    Create a New API Key
-                </Typography>
+            <Card className="shadow-sm mb-4">
+                <Card.Body className="p-4">
+                    <h2 className="h5 mb-3">Create a New API Key</h2>
 
-                <Box component="form" onSubmit={handleCreateKey} sx={{ mt: 3 }}>
-                    <Grid container spacing={3}>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                fullWidth
-                                id="keyName"
-                                label="Key Name"
-                                placeholder="e.g., Development Key, Production Key"
-                                value={newKeyName}
-                                onChange={(e) => setNewKeyName(e.target.value)}
-                                required
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                                fullWidth
-                                id="expiryDays"
-                                label="Expires After (days)"
-                                type="number"
-                                value={expiryDays}
-                                onChange={(e) => setExpiryDays(e.target.value)}
-                                inputProps={{ min: 0, max: 365 }}
-                            />
-                            <FormHelperText>
-                                Set to 0 for a non-expiring key (not recommended for production)
-                            </FormHelperText>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="success"
-                                disabled={creatingKey}
-                                sx={{ mt: 1 }}
-                            >
-                                {creatingKey ? (
-                                    <>
-                                        <CircularProgress size={24} sx={{ mr: 1 }} color="inherit" />
-                                        Creating...
-                                    </>
-                                ) : (
-                                    'Create API Key'
-                                )}
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </Box>
-            </Paper>
+                    <Form onSubmit={handleCreateKey}>
+                        <Row className="g-3">
+                            <Col xs={12} sm={6}>
+                                <Form.Group>
+                                    <Form.Label>Key Name</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        id="keyName"
+                                        placeholder="e.g., API Key 1, API Key 2"
+                                        value={newKeyName}
+                                        onChange={(e) => setNewKeyName(e.target.value)}
+                                        required
+                                    />
+                                </Form.Group>
+                            </Col>
+                            <Col xs={12} sm={6}>
+                                <Form.Group>
+                                    <Form.Label>Expires After (days)</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        id="expiryDays"
+                                        value={expiryDays}
+                                        onChange={(e) => setExpiryDays(e.target.value)}
+                                        min="0"
+                                        max="365"
+                                    />
+                                    <Form.Text className="text-muted">
+                                        Set to 0 for a non-expiring key
+                                    </Form.Text>
+                                </Form.Group>
+                            </Col>
+                            <Col xs={12}>
+                                <Button
+                                    type="submit"
+                                    variant="success"
+                                    disabled={creatingKey}
+                                    className="mt-2"
+                                >
+                                    {creatingKey ? (
+                                        <>
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden="true"
+                                                className="me-2"
+                                            />
+                                            Creating...
+                                        </>
+                                    ) : (
+                                        'Create API Key'
+                                    )}
+                                </Button>
+                            </Col>
+                        </Row>
+                    </Form>
+                </Card.Body>
+            </Card>
 
             {/* Success message */}
             {successMessage && (
-                <Alert severity="success" sx={{ mb: 3 }}>
+                <Alert variant="success" className="mb-3">
                     {successMessage}
                 </Alert>
             )}
 
             {/* Error message */}
             {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
+                <Alert variant="danger" className="mb-3">
                     {error}
                 </Alert>
             )}
 
             {/* Newly created key */}
             {newlyCreatedKey && (
-                <Alert severity="info" sx={{ mb: 3 }}>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                        Your new API key:
-                    </Typography>
-                    <Paper
-                        sx={{
-                            p: 2,
-                            my: 2,
-                            backgroundColor: 'background.paper',
-                            fontFamily: 'monospace',
-                            wordBreak: 'break-all',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between'
-                        }}
-                    >
-                        <Box>{newlyCreatedKey.key}</Box>
-                        <IconButton size="small" onClick={() => copyToClipboard(newlyCreatedKey.key)}>
-                            <ContentCopyIcon fontSize="small" />
-                        </IconButton>
-                    </Paper>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                <Alert variant="info" className="mb-3">
+                    <h5>Your new API key:</h5>
+                    <div className="bg-light p-3 my-2 border rounded d-flex align-items-center justify-content-between">
+                        <code className="text-break">{newlyCreatedKey.key}</code>
+                        <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => copyToClipboard(newlyCreatedKey.key)}
+                        >
+                            Copy
+                        </Button>
+                    </div>
+                    <p className="fw-bold mb-1">
                         Important: Copy this key now. You won't be able to see it again!
-                    </Typography>
+                    </p>
                     <Button
-                        size="small"
+                        variant="outline-primary"
+                        size="sm"
                         onClick={() => setNewlyCreatedKey(null)}
-                        sx={{ mt: 1 }}
+                        className="mt-2"
                     >
                         Dismiss
                     </Button>
@@ -341,130 +285,109 @@ export default function ApiKeys() {
             )}
 
             {/* API keys list */}
-            <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="h5" component="h2" gutterBottom>
-                    Your API Keys
-                </Typography>
+            <Card className="shadow-sm">
+                <Card.Body className="p-4">
+                    <h2 className="h5 mb-3">Your API Keys</h2>
 
-                {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                        <CircularProgress />
-                    </Box>
-                ) : apiKeys.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                        <Typography variant="body1">You don't have any API keys yet.</Typography>
-                    </Box>
-                ) : (
-                    <TableContainer>
-                        <Table>
-                            <TableHead>
-                                <TableRow sx={{ backgroundColor: 'action.hover' }}>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>Key</TableCell>
-                                    <TableCell>Created</TableCell>
-                                    <TableCell>Expires</TableCell>
-                                    <TableCell>Last Used</TableCell>
-                                    <TableCell>Usage Count</TableCell>
-                                    <TableCell>Status</TableCell>
-                                    <TableCell>Actions</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {apiKeys.map((key) => (
-                                    <TableRow key={key.id}>
-                                        <TableCell>{key.name}</TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                <Typography fontFamily="monospace" sx={{ mr: 1 }}>
-                                                    {key.displayKey}
-                                                </Typography>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => copyToClipboard(key.key)}
-                                                    title="Copy API key"
-                                                >
-                                                    <ContentCopyIcon fontSize="small" />
-                                                </IconButton>
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell>{formatDate(key.created_at)}</TableCell>
-                                        <TableCell>{formatDate(key.expires_at)}</TableCell>
-                                        <TableCell>{formatDate(key.last_used_at)}</TableCell>
-                                        <TableCell>{key.usage_count || 0}</TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                <Switch
-                                                    checked={Boolean(key.is_active)}
-                                                    onChange={() => handleToggleKey(key.id)}
-                                                    color="success"
-                                                />
-                                                <Chip
-                                                    label={key.is_active ? "Active" : "Inactive"}
-                                                    color={key.is_active ? "success" : "error"}
-                                                    size="small"
-                                                    variant="outlined"
-                                                />
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: 'flex', gap: 1 }}>
-                                                <IconButton
-                                                    color="error"
+                    {loading ? (
+                        <div className="d-flex justify-content-center py-4">
+                            <Spinner animation="border" />
+                        </div>
+                    ) : apiKeys.length === 0 ? (
+                        <div className="text-center py-4">
+                            <p>You don't have any API keys yet.</p>
+                        </div>
+                    ) : (
+                        <div className="table-responsive">
+                            <Table hover>
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Key</th>
+                                        <th>Created</th>
+                                        <th>Expires</th>
+                                        <th>Last Used</th>
+                                        <th>Usage Count</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {apiKeys.map((key) => (
+                                        <tr key={key.id}>
+                                            <td>{key.name}</td>
+                                            <td>
+                                                <div className="d-flex align-items-center">
+                                                    <code className="me-2">
+                                                        {key.displayKey}
+                                                    </code>
+                                                    <Button
+                                                        variant="outline-secondary"
+                                                        size="sm"
+                                                        onClick={() => copyToClipboard(key.key)}
+                                                        title="Copy API key"
+                                                    >
+                                                        Copy
+                                                    </Button>
+                                                </div>
+                                            </td>
+                                            <td>{formatDate(key.created_at)}</td>
+                                            <td>{formatDate(key.expires_at)}</td>
+                                            <td>{formatDate(key.last_used_at)}</td>
+                                            <td>{key.usage_count || 0}</td>
+                                            <td>
+                                                <div className="d-flex align-items-center">
+                                                    <Form.Check
+                                                        type="switch"
+                                                        checked={Boolean(key.is_active)}
+                                                        onChange={() => handleToggleKey(key.id)}
+                                                        className="me-2"
+                                                    />
+                                                    <Badge bg={key.is_active ? "success" : "danger"}>
+                                                        {key.is_active ? "Active" : "Inactive"}
+                                                    </Badge>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <Button
+                                                    variant="outline-danger"
+                                                    size="sm"
                                                     onClick={() => confirmDeleteKey(key)}
-                                                    size="small"
                                                     title="Delete key"
                                                 >
-                                                    <DeleteIcon />
-                                                </IconButton>
-                                                <Tooltip title="View usage details">
-                                                    <IconButton
-                                                        color="primary"
-                                                        onClick={() => handleViewUsage(key.id)}
-                                                        size="small"
-                                                    >
-                                                        <VisibilityIcon />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            </Box>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                )}
-            </Paper>
+                                                    Delete
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </div>
+                    )}
+                </Card.Body>
+            </Card>
 
-            {/* Confirmation Dialog */}
-            <Dialog
-                open={showConfirmation}
-                onClose={() => setShowConfirmation(false)}
+            {/* Confirmation Modal */}
+            <Modal
+                show={showConfirmation}
+                onHide={() => setShowConfirmation(false)}
+                centered
             >
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Are you sure you want to delete the API key "{keyToDelete?.name}"? This action cannot be undone.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setShowConfirmation(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Deletion</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    Are you sure you want to delete the API key "{keyToDelete?.name}"? This action cannot be undone.
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirmation(false)}>
                         Cancel
                     </Button>
-                    <Button onClick={handleDeleteKey} color="error" variant="contained">
+                    <Button variant="danger" onClick={handleDeleteKey}>
                         Delete
                     </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* API Key Usage Dialog */}
-            <ApiKeyUsageDialog
-                open={showUsageDialog}
-                onClose={handleCloseUsageDialog}
-                loading={loadingUsage}
-                keyData={selectedKeyData}
-                usageData={usageData}
-                summaryData={usageSummary}
-            />
+                </Modal.Footer>
+            </Modal>
         </Container>
     );
 } 

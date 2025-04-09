@@ -2,24 +2,17 @@ import { useState, useEffect } from 'react';
 import { apiKeysAPI } from '../services/api';
 import {
     Container,
-    Typography,
-    Box,
-    Paper,
+    Card,
     Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
     Alert,
-    CircularProgress,
-    TextField,
-    InputAdornment,
+    Spinner,
+    Form,
     Button,
-    Chip
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import RefreshIcon from '@mui/icons-material/Refresh';
+    InputGroup,
+    Badge,
+    Row,
+    Col
+} from 'react-bootstrap';
 
 export default function ApiKeyLogs() {
     const [logs, setLogs] = useState([]);
@@ -73,7 +66,11 @@ export default function ApiKeyLogs() {
     const formatDate = (dateString) => {
         if (!dateString) return 'Unknown';
         const date = new Date(dateString);
-        return date.toLocaleString();
+        return date.toLocaleString('en-GB', {
+            timeZone: 'UTC',
+            dateStyle: 'medium',
+            timeStyle: 'medium'
+        });
     };
 
     // Handle refresh button click
@@ -82,99 +79,94 @@ export default function ApiKeyLogs() {
     };
 
     return (
-        <Container maxWidth="xl">
-            <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 'bold' }}>
-                API Key Usage Logs
-            </Typography>
+        <Container>
+            <h1 className="mb-4 fw-bold">API Key Usage Logs</h1>
 
             {/* Search and Filter Controls */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <TextField
-                    placeholder="Search by key name, endpoint..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon />
-                            </InputAdornment>
-                        ),
-                    }}
-                    variant="outlined"
-                    size="small"
-                    sx={{ width: '300px' }}
-                />
-                <Button
-                    variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={handleRefresh}
-                    disabled={loading}
-                >
-                    Refresh
-                </Button>
-            </Box>
+            <Row className="mb-4 align-items-center">
+                <Col>
+                    <InputGroup>
+                        <Form.Control
+                            placeholder="Search by key name, endpoint..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                        <Button 
+                            variant="outline-secondary"
+                            onClick={() => setSearchTerm('')}
+                            disabled={!searchTerm}
+                        >
+                            Clear
+                        </Button>
+                    </InputGroup>
+                </Col>
+                <Col xs="auto">
+                    <Button
+                        variant="outline-primary"
+                        onClick={handleRefresh}
+                        disabled={loading}
+                    >
+                        {loading ? 'Refreshing...' : 'Refresh'}
+                    </Button>
+                </Col>
+            </Row>
 
             {/* Error message */}
             {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
+                <Alert variant="danger" className="mb-4">
                     {error}
                 </Alert>
             )}
 
             {/* Logs Table */}
-            <Paper elevation={3} sx={{ p: 3 }}>
-                <Typography variant="h6" component="h2" gutterBottom>
-                    API Request Log
-                </Typography>
+            <Card className="shadow-sm">
+                <Card.Body>
+                    <h2 className="h5 mb-3">API Request Log</h2>
 
-                {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                        <CircularProgress />
-                    </Box>
-                ) : filteredLogs.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                        <Typography variant="body1">
-                            {logs.length === 0
-                                ? "No API key usage logs found."
-                                : "No logs match your search criteria."}
-                        </Typography>
-                    </Box>
-                ) : (
-                    <TableContainer>
-                        <Table>
-                            <TableHead>
-                                <TableRow sx={{ backgroundColor: 'action.hover' }}>
-                                    <TableCell>Date/Time</TableCell>
-                                    <TableCell>API Key</TableCell>
-                                    <TableCell>Key Name</TableCell>
-                                    <TableCell>Endpoint</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {filteredLogs.map((log) => (
-                                    <TableRow key={log.usage_id} hover>
-                                        <TableCell>{formatDate(log.request_timestamp)}</TableCell>
-                                        <TableCell>
-                                            <Typography fontFamily="monospace">
-                                                {log.key_value}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>{log.key_name}</TableCell>
-                                        <TableCell>
-                                            <Chip
-                                                label={log.endpoint}
-                                                size="small"
-                                                variant="outlined"
-                                                color="primary"
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
-                )}
-            </Paper>
+                    {loading ? (
+                        <div className="d-flex justify-content-center py-4">
+                            <Spinner animation="border" />
+                        </div>
+                    ) : filteredLogs.length === 0 ? (
+                        <div className="text-center py-4">
+                            <p className="mb-0">
+                                {logs.length === 0
+                                    ? "No API key usage logs found."
+                                    : "No logs match your search criteria."}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="table-responsive">
+                            <Table hover>
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Date/Time</th>
+                                        <th>API Key</th>
+                                        <th>Key Name</th>
+                                        <th>Endpoint</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredLogs.map((log) => (
+                                        <tr key={log.usage_id}>
+                                            <td>{formatDate(log.request_timestamp)}</td>
+                                            <td>
+                                                <code>{log.key_value}</code>
+                                            </td>
+                                            <td>{log.key_name}</td>
+                                            <td>
+                                                <Badge bg="primary">
+                                                    {log.endpoint}
+                                                </Badge>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+                        </div>
+                    )}
+                </Card.Body>
+            </Card>
         </Container>
     );
 } 

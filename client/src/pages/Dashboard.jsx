@@ -1,37 +1,29 @@
 import { useState, useEffect } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { countriesAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
     Container,
-    Typography,
-    Box,
-    Paper,
-    Grid,
-    TextField,
+    Row,
+    Col,
+    Form,
     Button,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
     Card,
-    CardMedia,
-    CardContent,
     Alert,
-    Link,
-    CircularProgress,
-    FormHelperText
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+    Spinner,
+    InputGroup
+} from 'react-bootstrap';
 
 export default function Dashboard() {
     const [countries, setCountries] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [searching, setSearching] = useState(false);
     const [error, setError] = useState(null);
     const [selectedApiKey, setSelectedApiKey] = useState('');
     const [apiKeys, setApiKeys] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchType, setSearchType] = useState('name');
+    const [manualApiKey, setManualApiKey] = useState('');
+    const [useManualKey, setUseManualKey] = useState(false);
 
     const { user } = useAuth();
 
@@ -51,7 +43,6 @@ export default function Dashboard() {
                 }
 
                 const data = await response.json();
-                console.log('API keys received:', data.keys);
 
                 // Check if API keys exist and are in the correct format
                 if (data.keys && data.keys.length > 0) {
@@ -59,21 +50,17 @@ export default function Dashboard() {
                     const keys = data.keys
                         .filter(key => key.is_active === 1) // Only use active keys
                         .map(key => {
-                            console.log('Key from server:', key);
                             return {
                                 ...key,
                                 key: key.key.trim() // Ensure there's no whitespace
                             };
                         });
 
-                    console.log(`Filtered to ${keys.length} active keys out of ${data.keys.length} total keys`);
-
                     setApiKeys(keys);
 
                     // Select the first key by default if there are any active keys
                     if (keys.length > 0) {
                         const selectedKey = keys[0].key;
-                        console.log('Selected API key:', selectedKey);
                         setSelectedApiKey(selectedKey);
                     } else {
                         // If no active keys, show an error
@@ -94,8 +81,6 @@ export default function Dashboard() {
 
     // Fetch all countries when an API key is selected
     useEffect(() => {
-        // Don't automatically fetch countries when API key is selected
-        // Instead, show a message to the user to start a search
         if (selectedApiKey) {
             setLoading(false);
         }
@@ -105,39 +90,18 @@ export default function Dashboard() {
     const handleSearch = async (e) => {
         e.preventDefault();
 
-        if (!selectedApiKey) return;
+        const apiKeyToUse = useManualKey ? manualApiKey : selectedApiKey;
+        if (!apiKeyToUse) return;
+        
+        // Don't perform search if no search term is entered
+        if (!searchTerm) return;
 
-        setLoading(true);
+        setSearching(true);
         setError(null);
 
         try {
-            let response;
-
-            if (!searchTerm) {
-                // If no search term, fetch all countries
-                response = await countriesAPI.getAllCountries(selectedApiKey);
-            } else {
-                // Otherwise, perform specific search
-                switch (searchType) {
-                    case 'name':
-                        response = await countriesAPI.getCountryByName(searchTerm, selectedApiKey);
-                        break;
-                    case 'region':
-                        response = await countriesAPI.getCountriesByRegion(searchTerm, selectedApiKey);
-                        break;
-                    case 'code':
-                        response = await countriesAPI.getCountryByCode(searchTerm, selectedApiKey);
-                        break;
-                    case 'currency':
-                        response = await countriesAPI.getCountriesByCurrency(searchTerm, selectedApiKey);
-                        break;
-                    case 'language':
-                        response = await countriesAPI.getCountriesByLanguage(searchTerm, selectedApiKey);
-                        break;
-                    default:
-                        response = await countriesAPI.getCountryByName(searchTerm, selectedApiKey);
-                }
-            }
+            // Only search by country name when search term is provided
+            const response = await countriesAPI.getCountryByName(searchTerm, apiKeyToUse);
 
             // Handle single country response format
             if (response.data.data && Array.isArray(response.data.data)) {
@@ -149,10 +113,15 @@ export default function Dashboard() {
             }
         } catch (err) {
             console.error('Error searching countries:', err);
-            setError(`No results found for "${searchTerm}" in ${searchType}.`);
+            // Check for unauthorized error which indicates invalid API key
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                setError('Invalid API key. Please check your API key and try again.');
+            } else {
+                setError(`No results found for "${searchTerm}".`);
+            }
             setCountries([]);
         } finally {
-            setLoading(false);
+            setSearching(false);
         }
     };
 
@@ -203,165 +172,151 @@ export default function Dashboard() {
     };
 
     return (
-        <Container maxWidth="xl">
-            <Typography variant="h4" component="h1" sx={{ mb: 4, fontWeight: 'bold' }}>
-                Dashboard
-            </Typography>
+        <Container>
+            <h1 className="mb-4 fw-bold">Dashboard</h1>
 
-            <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-                <Typography variant="h5" component="h2" gutterBottom>
-                    Welcome, {user?.username}!
-                </Typography>
-                <Typography variant="body1" paragraph>
-                    Use this dashboard to explore country data from the RestCountries API.
-                </Typography>
+            <Card className="mb-4 shadow-sm">
+                <Card.Body className="p-4">
+                    <h2 className="h5 mb-3">Welcome, {user?.username}!</h2>
+                    <p>Use this dashboard to explore country data from the RestCountries API.</p>
 
-                {apiKeys.length === 0 ? (
-                    <Alert severity="warning" sx={{ mb: 3 }}>
-                        <Typography variant="body1">You don't have any API keys yet.</Typography>
-                        <Link component={RouterLink} to="/api-keys">
-                            Create an API key
-                        </Link> to start using the API.
-                    </Alert>
-                ) : (
-                    <Box sx={{ mb: 3 }}>
-                        {apiKeys.filter(key => key.is_active === 1).length === 0 && (
-                            <Alert severity="warning" sx={{ mb: 3 }}>
-                                <Typography variant="body1">You have API keys but none are active.</Typography>
-                                <Button
-                                    onClick={activateAllKeys}
-                                    variant="contained"
-                                    color="primary"
-                                    sx={{ mt: 1 }}
-                                    disabled={loading}
+                    {apiKeys.length === 0 ? (
+                        <Alert variant="warning" className="mb-3">
+                            <p className="mb-0">You don't have any API keys yet.</p>
+                            <Link to="/api-keys">
+                                Create an API key
+                            </Link> to start using the API.
+                        </Alert>
+                    ) : (
+                        <div className="mb-3">
+                            {apiKeys.filter(key => key.is_active === 1).length === 0 && (
+                                <Alert variant="warning" className="mb-3">
+                                    <p className="mb-0">You have API keys but none are active.</p>
+                                    <Button
+                                        onClick={activateAllKeys}
+                                        variant="primary"
+                                        className="mt-2"
+                                        disabled={loading}
+                                    >
+                                        {loading ? 'Activating...' : 'Activate All Keys'}
+                                    </Button>
+                                </Alert>
+                            )}
+                            <div className="d-flex align-items-center mb-3">
+                                <span className="me-2">Use manual API key:</span>
+                                <Button 
+                                    variant={useManualKey ? "primary" : "outline-primary"}
+                                    size="sm"
+                                    onClick={() => setUseManualKey(!useManualKey)}
+                                    className="me-2"
                                 >
-                                    {loading ? 'Activating...' : 'Activate All Keys'}
+                                    {useManualKey ? "On" : "Off"}
                                 </Button>
-                            </Alert>
-                        )}
-                        <FormControl fullWidth sx={{ mb: 3 }}>
-                            <InputLabel id="api-key-select-label">Select API Key</InputLabel>
-                            <Select
-                                labelId="api-key-select-label"
-                                id="api-key-select"
-                                value={selectedApiKey}
-                                label="Select API Key"
-                                onChange={(e) => setSelectedApiKey(e.target.value)}
-                            >
-                                {apiKeys.map((key) => (
-                                    <MenuItem key={key.id} value={key.key}>
-                                        {key.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Box>
-                )}
+                            </div>
 
-                <Box component="form" onSubmit={handleSearch} noValidate>
-                    <Grid container spacing={2} alignItems="center">
-                        <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Search for a country"
-                                variant="outlined"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={3}>
-                            <FormControl fullWidth>
-                                <InputLabel id="search-type-label">Search by</InputLabel>
-                                <Select
-                                    labelId="search-type-label"
-                                    id="search-type"
-                                    value={searchType}
-                                    label="Search by"
-                                    onChange={(e) => setSearchType(e.target.value)}
+                            {!useManualKey ? (
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Select API Key</Form.Label>
+                                    <Form.Select
+                                        value={selectedApiKey}
+                                        onChange={(e) => setSelectedApiKey(e.target.value)}
+                                    >
+                                        {apiKeys.map((key) => (
+                                            <option key={key.id} value={key.key}>
+                                                {key.name}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+                            ) : (
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Enter API Key manually</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Paste your API key here"
+                                        value={manualApiKey}
+                                        onChange={(e) => setManualApiKey(e.target.value)}
+                                    />
+                                </Form.Group>
+                            )}
+                        </div>
+                    )}
+
+                    <Form onSubmit={handleSearch}>
+                        <Row className="g-2 align-items-center">
+                            <Col md={8}>
+                                <Form.Control
+                                    type="text"
+                                    placeholder="Enter country name"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </Col>
+                            <Col md={4}>
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    className="w-100"
+                                    disabled={!(useManualKey ? manualApiKey : selectedApiKey) || searching}
                                 >
-                                    <MenuItem value="name">Name</MenuItem>
-                                    <MenuItem value="region">Region</MenuItem>
-                                    <MenuItem value="code">Country Code</MenuItem>
-                                    <MenuItem value="currency">Currency</MenuItem>
-                                    <MenuItem value="language">Language</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={12} md={3}>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                fullWidth
-                                startIcon={<SearchIcon />}
-                                disabled={!selectedApiKey || loading}
-                            >
-                                {loading ? 'Searching...' : 'Search'}
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </Box>
-            </Paper>
+                                    {searching ? 'Searching...' : 'Search'}
+                                </Button>
+                            </Col>
+                        </Row>
+                    </Form>
+                </Card.Body>
+            </Card>
 
             {error && (
-                <Alert severity="error" sx={{ mb: 4 }}>
+                <Alert variant="danger" className="mb-4">
                     {error}
                 </Alert>
             )}
 
-            {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                    <CircularProgress />
-                </Box>
+            {searching ? (
+                <div className="d-flex justify-content-center py-5">
+                    <Spinner animation="border" />
+                </div>
             ) : (
-                <Grid container spacing={3}>
+                <Row>
                     {countries.map((country, index) => (
-                        <Grid item key={index} xs={12} sm={6} md={4}>
-                            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                                <CardMedia
-                                    component="img"
-                                    height="160"
-                                    image={country.flags.png}
+                        <Col key={index} xs={12} sm={6} md={4} className="mb-4">
+                            <Card className="h-100">
+                                <Card.Img
+                                    variant="top"
+                                    src={country.flags.png}
                                     alt={country.flags.alt || `Flag of ${country.name.common}`}
+                                    style={{ height: "160px", objectFit: "cover" }}
                                 />
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Typography variant="h6" component="h3" gutterBottom>
-                                        {country.name.common}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
-                                        {country.name.official}
-                                    </Typography>
-
-                                    <Typography variant="body2" paragraph>
-                                        <Box component="span" fontWeight="bold">Capital: </Box>
+                                <Card.Body>
+                                    <Card.Title>{country.name.common}</Card.Title>
+                                    <Card.Text>
+                                        <span className="fw-bold">Capital: </span>
                                         {country.capital && country.capital.length > 0
                                             ? country.capital.join(', ')
                                             : 'N/A'}
-                                    </Typography>
-
-                                    <Typography variant="body2" paragraph>
-                                        <Box component="span" fontWeight="bold">Currencies: </Box>
+                                    </Card.Text>
+                                    <Card.Text>
+                                        <span className="fw-bold">Currencies: </span>
                                         {formatCurrencies(country.currencies)}
-                                    </Typography>
-
-                                    <Typography variant="body2">
-                                        <Box component="span" fontWeight="bold">Languages: </Box>
+                                    </Card.Text>
+                                    <Card.Text>
+                                        <span className="fw-bold">Languages: </span>
                                         {formatLanguages(country.languages)}
-                                    </Typography>
-                                </CardContent>
+                                    </Card.Text>
+                                </Card.Body>
                             </Card>
-                        </Grid>
+                        </Col>
                     ))}
 
                     {countries.length === 0 && !loading && !error && (
-                        <Grid item xs={12}>
-                            <Box sx={{ textAlign: 'center', py: 8 }}>
-                                <Typography variant="h6">
-                                    No countries to display. Try searching for a country.
-                                </Typography>
-                            </Box>
-                        </Grid>
+                        <Col xs={12} className="text-center py-5">
+                            <h3 className="h6">
+                                No countries to display. Try searching for a country.
+                            </h3>
+                        </Col>
                     )}
-                </Grid>
+                </Row>
             )}
         </Container>
     );

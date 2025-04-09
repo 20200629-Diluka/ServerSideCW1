@@ -1,17 +1,7 @@
 import { useState } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import {
-    Container,
-    Box,
-    Typography,
-    TextField,
-    Button,
-    Paper,
-    Alert,
-    Link
-} from '@mui/material';
-import LoginIcon from '@mui/icons-material/Login';
+import { Container, Row, Col, Form, Button, Card, Alert } from 'react-bootstrap';
 
 export default function Login() {
     const [formData, setFormData] = useState({
@@ -54,65 +44,69 @@ export default function Login() {
     };
 
     return (
-        <Container maxWidth="sm" sx={{ mt: 8 }}>
-            <Paper elevation={3} sx={{ p: 4 }}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Typography component="h1" variant="h4" gutterBottom>
-                        Login
-                    </Typography>
+        <Container className="mt-5">
+            <Row className="justify-content-center">
+                <Col md={6}>
+                    <Card className="shadow">
+                        <Card.Body className="p-4">
+                            <div className="text-center mb-4">
+                                <h1 className="h4">Login</h1>
+                            </div>
 
-                    {error && (
-                        <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-                            {error}
-                        </Alert>
-                    )}
+                            {error && (
+                                <Alert variant="danger">
+                                    {error}
+                                </Alert>
+                            )}
 
-                    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mt: 1 }}>
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            id="username"
-                            label="Username"
-                            name="username"
-                            autoComplete="username"
-                            autoFocus
-                            value={formData.username}
-                            onChange={handleChange}
-                        />
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
-                            name="password"
-                            label="Password"
-                            type="password"
-                            id="password"
-                            autoComplete="current-password"
-                            value={formData.password}
-                            onChange={handleChange}
-                        />
-                        <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            startIcon={<LoginIcon />}
-                            disabled={isSubmitting}
-                            sx={{ mt: 3, mb: 2 }}
-                        >
-                            {isSubmitting ? 'Logging in...' : 'Login'}
-                        </Button>
-                        <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <Typography variant="body2">
-                                Don't have an account?{' '}
-                                <Link component={RouterLink} to="/register" variant="body2">
-                                    Register here
-                                </Link>
-                            </Typography>
-                        </Box>
-                    </Box>
-                </Box>
-            </Paper>
+                            <Form onSubmit={handleSubmit}>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Username</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        id="username"
+                                        name="username"
+                                        value={formData.username}
+                                        onChange={handleChange}
+                                        required
+                                        autoFocus
+                                    />
+                                </Form.Group>
+                                
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Password</Form.Label>
+                                    <Form.Control
+                                        type="password"
+                                        id="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </Form.Group>
+                                
+                                <Button
+                                    type="submit"
+                                    variant="primary"
+                                    className="w-100 mt-3"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? 'Logging in...' : 'Login'}
+                                </Button>
+                                
+                                <div className="mt-3 text-center">
+                                    <p className="mb-0">
+                                        Don't have an account?{' '}
+                                        <Link to="/register">
+                                            Register here
+                                        </Link>
+                                    </p>
+                                </div>
+                            </Form>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
         </Container>
     );
 } 
